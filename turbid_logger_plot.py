@@ -76,10 +76,22 @@ def reader():
                 print(ts, *campi, sep="  ")
             elif line.startswith("#"):
                 print(line)
+        # chiusura pulita: forza la scrittura su disco
+        f.flush()
+        os.fsync(f.fileno())
         if ser:
             ser.close()
 
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(10, 7))
+
+def on_key(event):
+    """Esc (con la finestra del grafico in focus) -> arresto acquisizione e chiusura."""
+    if event.key == "escape":
+        print("\nEsc: arresto acquisizione.")
+        stop.set()
+        plt.close(fig)
+
+fig.canvas.mpl_connect("key_press_event", on_key)
 
 def update(_):
     with lock:
@@ -94,7 +106,7 @@ def update(_):
         ax2.plot(t, [d[2][i] for d in dati], label=f"Sensore {i+1}")
     ax1.set_ylabel("Valore (NTU se non calibrato)")
     ax2.set_ylabel("Tensione (V)")
-    ax2.set_xlabel("Ora")
+    ax2.set_xlabel("Ora (Esc per fermare e chiudere)")
     ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d %H:%M"))
     for ax in (ax1, ax2):
         ax.grid(True, alpha=0.3)
@@ -106,6 +118,9 @@ th.start()
 ani = FuncAnimation(fig, update, interval=REFRESH_MS, cache_frame_data=False)
 try:
     plt.show()
+except KeyboardInterrupt:
+    pass
 finally:
     stop.set()
-    th.join(timeout=3)
+    th.join(timeout=3)   # attende la chiusura pulita del file (max ~2 s di timeout seriale)
+    print("Interrotto. Dati salvati in", OUTFILE)
