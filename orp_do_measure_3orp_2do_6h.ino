@@ -2,8 +2,8 @@
 // Output on serial (9600 baud), one line per sample:
 //     time_ms;<ORP 1>;<ORP 2>;<ORP 3>;<DO 1>;<DO 2>
 // On a failed read the reply field is "ERR<code>" (see ezoFetch() for codes).
-// Lines starting with '#' are comments/status. The Python logger can add a timestamp and write
-// the CSV; its column parsing will need to be updated separately for this five-probe output.
+// Lines starting with '#' are comments/status. do_logger.py defaults to this ORP/DO order;
+// use its --probes option to match a different sensor order and number of Arduino output fields.
 // UNTESTED on hardware. Opening the serial port from the Pi resets the Arduino (DTR) and starts
 // a new 6 h session; the Arduino also stops by itself after DURATION_MS.
 
